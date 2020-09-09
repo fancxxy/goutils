@@ -1,6 +1,7 @@
 package requests
 
 import (
+	"bytes"
 	"compress/gzip"
 	"io/ioutil"
 	"net"
@@ -57,6 +58,7 @@ func (r *Client) do(method, rawurl string, params ...interface{}) (*Response, er
 			ProtoMinor: 1,
 		}
 		query, form Query
+		data        []byte
 		response    = &Response{Req: req}
 	)
 
@@ -73,6 +75,8 @@ func (r *Client) do(method, rawurl string, params ...interface{}) (*Response, er
 			case "POST":
 				form = m
 			}
+		case []byte:
+			data = m
 		}
 	}
 
@@ -83,6 +87,8 @@ func (r *Client) do(method, rawurl string, params ...interface{}) (*Response, er
 		if req.Header.Get("Content-Type") == "" {
 			req.Header.Set("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8")
 		}
+	} else {
+		req.Body = ioutil.NopCloser(bytes.NewReader(data))
 	}
 
 	if query != nil {
